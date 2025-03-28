@@ -6,12 +6,12 @@ error_reporting(E_ALL);
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    echo json_encode(['status' => 'error', 'message' => 'Método no permitido']);
+    echo json_encode(['status' => 'error', 'message' => 'Metodo no permitido']);
     exit;
 }
 
 if (!isset($_POST['password']) || !isset($_POST['filedata'])) {
-    echo json_encode(['status' => 'error', 'message' => 'Faltan parámetros']);
+    echo json_encode(['status' => 'error', 'message' => 'Faltan parametros']);
     exit;
 }
 
