@@ -23,7 +23,15 @@ file_put_contents($tempFile, $filedata);
 
 $certs = [];
 if (openssl_pkcs12_read(file_get_contents($tempFile), $certs, $password)) {
-    echo json_encode(['status' => 'valid']);
+    $info = openssl_x509_parse($certs['cert']);
+    echo json_encode([
+        'status' => 'valid',
+        'serialNumber' => $info['serialNumberHex'],
+        'validFrom' => date('Y-m-d H:i:s', $info['validFrom_time_t']),
+        'validTo' => date('Y-m-d H:i:s', $info['validTo_time_t']),
+        'subject' => $info['subject'],
+        'issuer' => $info['issuer']
+    ]);
 } else {
     echo json_encode(['status' => 'invalid']);
 }
