@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: validador-pfx
+    env: php
+    plan: free
+    buildCommand: ""
+    startCommand: ""
