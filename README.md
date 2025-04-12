@@ -11,7 +11,7 @@ Este validador permite:
 | Acción (`accion`)   | Archivo necesario       | Contraseña | Resultado esperado                          |
 |---------------------|-------------------------|------------|---------------------------------------------|
 | `validar-pfx`       | `.pfx` o `.p12` en b64   | ✅         | Número de certificado, vigencia             |
-| `validar-key`       | `.key` en b64            | ✅         | Validez de la llave privada                 |
+| `validar-key`       | `.key` en b64            | ✅         | Validez de la llave y exportación PEM       |
 | `leer-cer`          | `.cer` en b64            | ❌         | Número de certificado y vigencia            |
 
 ---
@@ -32,10 +32,10 @@ Enviar los siguientes campos como `application/x-www-form-urlencoded`:
 
 ## 📤 Respuestas (JSON)
 
-### ✔️ Ejemplo exitoso:
+### ✔️ Ejemplo exitoso `leer-cer` o `validar-pfx`:
 ```json
 {
-  "estatus": "válido",
+  "estatus": "valido",
   "numero_certificado": "30001000000400002415",
   "vigencia_inicio": "2022-03-01 00:00:00",
   "vigencia_fin": "2026-03-01 23:59:59"
