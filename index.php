@@ -47,7 +47,19 @@ switch ($accion) {
         if (!$key) {
             echo json_encode(["estatus" => "invalido", "mensaje" => "Llave privada invalida o contrasena incorrecta"]);
         } else {
-            echo json_encode(["estatus" => "valido", "mensaje" => "Llave privada valida"]);
+            $pem = '';
+            if (openssl_pkey_export($key, $pem, null)) {
+                echo json_encode([
+                    "estatus" => "valido",
+                    "mensaje" => "Llave privada valida",
+                    "key_pkcs8_pem" => $pem
+                ]);
+            } else {
+                echo json_encode([
+                    "estatus" => "valido",
+                    "mensaje" => "Llave privada valida, pero no se pudo exportar en formato PEM"
+                ]);
+            }
         }
         break;
 
