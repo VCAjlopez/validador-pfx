@@ -1,40 +1,74 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
 
 header('Content-Type: application/json');
 
+function formatearFecha($timestamp) {
+    return date('Y-m-d H:i:s', $timestamp);
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    echo json_encode(['status' => 'error', 'message' => 'Metodo no permitido']);
+    echo json_encode(["estatus" => "error", "mensaje" => "Solo se permite POST"]);
     exit;
 }
 
-if (!isset($_POST['password']) || !isset($_POST['filedata'])) {
-    echo json_encode(['status' => 'error', 'message' => 'Faltan parametros']);
+$accion = $_POST['accion'] ?? null;
+$pass = $_POST['pass'] ?? '';
+$archivo_b64 = $_POST['archivo_b64'] ?? null;
+$nombre_archivo = $_POST['nombre_archivo'] ?? null;
+
+if (!$accion || !$archivo_b64 || !$nombre_archivo) {
+    echo json_encode(["estatus" => "error", "mensaje" => "Faltan parametros"]);
     exit;
 }
 
-$password = $_POST['password'];
-$filedata = base64_decode($_POST['filedata']);
-
-$tempFile = __DIR__ . '/tmp_' . uniqid() . '.pfx';
-file_put_contents($tempFile, $filedata);
-
-$certs = [];
-if (openssl_pkcs12_read(file_get_contents($tempFile), $certs, $password)) {
-    $info = openssl_x509_parse($certs['cert']);
-    echo json_encode([
-        'status' => 'valid',
-        'serialNumber' => $info['serialNumberHex'],
-        'validFrom' => date('Y-m-d H:i:s', $info['validFrom_time_t']),
-        'validTo' => date('Y-m-d H:i:s', $info['validTo_time_t']),
-        'subject' => $info['subject'],
-        'issuer' => $info['issuer']
-    ]);
-} else {
-    echo json_encode(['status' => 'invalid']);
+$contenido = base64_decode($archivo_b64);
+if ($contenido === false) {
+    echo json_encode(["estatus" => "error", "mensaje" => "El archivo base64 no es valido"]);
+    exit;
 }
 
-unlink($tempFile);
-?>
+switch ($accion) {
+    case 'validar-pfx':
+        $certs = [];
+        if (!openssl_pkcs12_read($contenido, $certs, $pass)) {
+            echo json_encode(["estatus" => "inválido", "mensaje" => "Contrasenia incorrecta o archivo .pfx inválido"]);
+            exit;
+        }
+        $certData = openssl_x509_parse($certs['cert']);
+        echo json_encode([
+            "estatus" => "válido",
+            "numero_certificado" => $certData['serialNumberHex'] ?? '',
+            "vigencia_inicio" => formatearFecha($certData['validFrom_time_t']),
+            "vigencia_fin" => formatearFecha($certData['validTo_time_t'])
+        ]);
+        break;
+
+    case 'validar-key':
+        $key = openssl_pkey_get_private($contenido, $pass);
+        if (!$key) {
+            echo json_encode(["estatus" => "invalido", "mensaje" => "Llave privada invalida o contraseña incorrecta"]);
+        } else {
+            echo json_encode(["estatus" => "valido", "mensaje" => "Llave privada valida"]);
+        }
+        break;
+
+    case 'leer-cer':
+        $cert = openssl_x509_read($contenido);
+        if (!$cert) {
+            echo json_encode(["estatus" => "invalido", "mensaje" => "Certificado .cer no valido"]);
+            exit;
+        }
+        $certData = openssl_x509_parse($cert);
+        echo json_encode([
+            "estatus" => "válido",
+            "numero_certificado" => $certData['serialNumberHex'] ?? '',
+            "vigencia_inicio" => formatearFecha($certData['validFrom_time_t']),
+            "vigencia_fin" => formatearFecha($certData['validTo_time_t'])
+        ]);
+        break;
+
+    default:
+        echo json_encode(["estatus" => "error", "mensaje" => "Accion no reconocida"]);
+        break;
+}
+
