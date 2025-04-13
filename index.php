@@ -41,7 +41,8 @@ if ($accion === 'validar-pfx') {
             'issuer' => $info['issuer']
         ]);
     } else {
-        echo json_encode(['status' => 'invalido']);
+        echo json_encode(["estatus" => "invalido", "mensaje" => "Contrasena incorrecta o archivo .pfx/.p12 invalido"]);
+
     }
 
     unlink($tempFile);
