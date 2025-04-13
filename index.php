@@ -33,15 +33,15 @@ if ($accion === 'validar-pfx') {
     if (openssl_pkcs12_read(file_get_contents($tempFile), $certs, $password)) {
         $info = openssl_x509_parse($certs['cert']);
         echo json_encode([
-            'status' => 'valid',
-            'serialNumber' => $info['serialNumberHex'],
-            'validFrom' => date('Y-m-d H:i:s', $info['validFrom_time_t']),
-            'validTo' => date('Y-m-d H:i:s', $info['validTo_time_t']),
+            'estatus' => 'valido',
+            'numero_certificado' => $info['serialNumberHex'],
+            'vigencia_inicio' => date('Y-m-d H:i:s', $info['validFrom_time_t']),
+            'vigencia_fin' => date('Y-m-d H:i:s', $info['validTo_time_t']),
             'subject' => $info['subject'],
             'issuer' => $info['issuer']
         ]);
     } else {
-        echo json_encode(['status' => 'invalid']);
+        echo json_encode(['status' => 'invalido']);
     }
 
     unlink($tempFile);
@@ -50,7 +50,7 @@ if ($accion === 'validar-pfx') {
 
 if ($accion === 'leer-cer') {
     if (!isset($_POST['filedata'])) {
-        echo json_encode(['status' => 'error', 'message' => 'Falta archivo cer']);
+        echo json_encode(['estatus' => 'error', 'message' => 'Falta archivo cer']);
         exit;
     }
 
@@ -62,16 +62,16 @@ if ($accion === 'leer-cer') {
     }
 
     if (!$cert) {
-        echo json_encode(['status' => 'invalid']);
+        echo json_encode(['estatus' => 'invalido']);
         exit;
     }
 
     $info = openssl_x509_parse($cert);
     echo json_encode([
-        'status' => 'valid',
-        'serialNumber' => $info['serialNumberHex'],
-        'validFrom' => date('Y-m-d H:i:s', $info['validFrom_time_t']),
-        'validTo' => date('Y-m-d H:i:s', $info['validTo_time_t']),
+        'estatus' => 'valid',
+        "numero_certificado" => isset($certData['serialNumberHex']) ? hex2bin($certData['serialNumberHex']) : '',
+        'vigencia_inicio' => date('Y-m-d H:i:s', $info['validFrom_time_t']),
+        'vigencia_final' => date('Y-m-d H:i:s', $info['validTo_time_t']),
         'subject' => $info['subject'],
         'issuer' => $info['issuer']
     ]);
