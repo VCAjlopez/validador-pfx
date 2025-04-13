@@ -134,3 +134,9 @@ Permite verificar si una llave privada `.key` y un certificado `.cer` correspond
   "mensaje": "No se pudo leer alguno de los archivos"
 }
 ```
+
+## 🧾 Compatibilidad en `leer-cer`
+
+Este endpoint ahora acepta archivos `.cer` en **formato DER o PEM** de forma automática.
+
+El backend intentará leerlo como binario DER primero, y si falla, lo convertirá temporalmente a PEM e intentará nuevamente.
