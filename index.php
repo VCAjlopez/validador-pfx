@@ -36,7 +36,7 @@ switch ($accion) {
         $certData = openssl_x509_parse($certs['cert']);
         echo json_encode([
             "estatus" => "valido",
-            "numero_certificado" => $certData['serialNumberHex'] ?? '',
+            "numero_certificado" => isset($certData['serialNumberHex']) ? hex2bin($certData['serialNumberHex']) : '',
             "vigencia_inicio" => formatearFecha($certData['validFrom_time_t']),
             "vigencia_fin" => formatearFecha($certData['validTo_time_t'])
         ]);
@@ -85,6 +85,24 @@ switch ($accion) {
         ]);
         break;
 
+    case 'convertir-key':
+        $key = openssl_pkey_get_private($contenido, $pass);
+        if (!$key) {
+            echo json_encode(["estatus" => "invalido", "mensaje" => "Llave privada invalida o contrasena incorrecta"]);
+            exit;
+        }
+        $pem = '';
+        if (openssl_pkey_export($key, $pem)) {
+            echo json_encode([
+                "estatus" => "valido",
+                "formato" => "pem",
+                "contenido_pem" => $pem
+            ]);
+        } else {
+            echo json_encode(["estatus" => "error", "mensaje" => "No se pudo exportar la llave en formato PEM"]);
+        }
+        break;
+
     case 'comparar-key-cer':
         $key_b64 = $_POST['key_b64'] ?? null;
         $cer_b64 = $_POST['cer_b64'] ?? null;
@@ -103,7 +121,6 @@ switch ($accion) {
             $pem = "-----BEGIN CERTIFICATE-----\n" . chunk_split(base64_encode($cer_bin), 64, "\n") . "-----END CERTIFICATE-----\n";
             $cert = @openssl_x509_read($pem);
         }
-
 
         if (!$key || !$cert) {
             echo json_encode(["estatus" => "error", "mensaje" => "No se pudo leer alguno de los archivos"]);
