@@ -7,12 +7,12 @@ error_reporting(E_ALL);
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    echo json_encode(['status' => 'error', 'message' => 'Metodo no permitido']);
+    echo json_encode(['estatus' => 'error', 'message' => 'Metodo no permitido']);
     exit;
 }
 
 if (!isset($_POST['accion'])) {
-    echo json_encode(['status' => 'error', 'message' => 'Falta parametro accion']);
+    echo json_encode(['estatus' => 'error', 'message' => 'Falta parametro accion']);
     exit;
 }
 
@@ -20,7 +20,7 @@ $accion = $_POST['accion'];
 
 if ($accion === 'validar-pfx') {
     if (!isset($_POST['password']) || !isset($_POST['filedata'])) {
-        echo json_encode(['status' => 'error', 'message' => 'Faltan parametros']);
+        echo json_encode(['estatus' => 'error', 'message' => 'Faltan parametros']);
         exit;
     }
 
@@ -68,7 +68,7 @@ if ($accion === 'leer-cer') {
 
     $info = openssl_x509_parse($cert);
     echo json_encode([
-        'estatus' => 'valid',
+        'estatus' => 'valido',
         "numero_certificado" => isset($certData['serialNumberHex']) ? hex2bin($certData['serialNumberHex']) : '',
         'vigencia_inicio' => date('Y-m-d H:i:s', $info['validFrom_time_t']),
         'vigencia_final' => date('Y-m-d H:i:s', $info['validTo_time_t']),
@@ -78,4 +78,4 @@ if ($accion === 'leer-cer') {
     exit;
 }
 
-echo json_encode(['status' => 'error', 'message' => 'Accion no reconocida']);
+echo json_encode(['estatus' => 'error', 'message' => 'Accion no reconocida']);
