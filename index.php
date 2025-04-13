@@ -42,27 +42,6 @@ switch ($accion) {
         ]);
         break;
 
-    case 'validar-key':
-        $key = openssl_pkey_get_private($contenido, $pass);
-        if (!$key) {
-            echo json_encode(["estatus" => "invalido", "mensaje" => "Llave privada invalida o contrasena incorrecta"]);
-        } else {
-            $pem = '';
-            if (openssl_pkey_export($key, $pem, null)) {
-                echo json_encode([
-                    "estatus" => "valido",
-                    "mensaje" => "Llave privada valida",
-                    "key_pkcs8_pem" => $pem
-                ]);
-            } else {
-                echo json_encode([
-                    "estatus" => "valido",
-                    "mensaje" => "Llave privada valida, pero no se pudo exportar en formato PEM"
-                ]);
-            }
-        }
-        break;
-
     case 'leer-cer':
         $cert = @openssl_x509_read($contenido);
 
@@ -83,70 +62,6 @@ switch ($accion) {
             "vigencia_inicio" => formatearFecha($certData['validFrom_time_t']),
             "vigencia_fin" => formatearFecha($certData['validTo_time_t'])
         ]);
-        break;
-
-    case 'convertir-key':
-        $key = openssl_pkey_get_private($contenido, $pass);
-        if (!$key) {
-            echo json_encode(["estatus" => "invalido", "mensaje" => "Llave privada invalida o contrasena incorrecta"]);
-            exit;
-        }
-        $pem = '';
-        if (openssl_pkey_export($key, $pem)) {
-            echo json_encode([
-                "estatus" => "valido",
-                "formato" => "pem",
-                "contenido_pem" => $pem
-            ]);
-        } else {
-            echo json_encode(["estatus" => "error", "mensaje" => "No se pudo exportar la llave en formato PEM"]);
-        }
-        break;
-
-    case 'comparar-key-cer':
-        $key_b64 = $_POST['key_b64'] ?? null;
-        $cer_b64 = $_POST['cer_b64'] ?? null;
-
-        if (!$key_b64 || !$cer_b64) {
-            echo json_encode(["estatus" => "error", "mensaje" => "Faltan archivos key_b64 o cer_b64"]);
-            exit;
-        }
-
-        $key_bin = base64_decode($key_b64);
-        $cer_bin = base64_decode($cer_b64);
-
-        $key = openssl_pkey_get_private($key_bin, $pass);
-        $cert = @openssl_x509_read($cer_bin);
-        if (!$cert) {
-            $pem = "-----BEGIN CERTIFICATE-----\n" . chunk_split(base64_encode($cer_bin), 64, "\n") . "-----END CERTIFICATE-----\n";
-            $cert = @openssl_x509_read($pem);
-        }
-
-        if (!$key || !$cert) {
-            echo json_encode(["estatus" => "error", "mensaje" => "No se pudo leer alguno de los archivos"]);
-            exit;
-        }
-
-        $key_details = openssl_pkey_get_details($key);
-        $cert_pubkey = openssl_get_publickey($cert);
-        $cert_pubkey_details = openssl_pkey_get_details($cert_pubkey);
-
-        if (!$key_details || !$cert_pubkey_details) {
-            echo json_encode(["estatus" => "error", "mensaje" => "No se pudieron obtener los modulus"]);
-            exit;
-        }
-
-        if ($key_details['rsa']['n'] === $cert_pubkey_details['rsa']['n']) {
-            echo json_encode([
-                "estatus" => "coinciden",
-                "mensaje" => "La llave privada y el certificado corresponden al mismo par"
-            ]);
-        } else {
-            echo json_encode([
-                "estatus" => "diferente",
-                "mensaje" => "La llave privada y el certificado no corresponden"
-            ]);
-        }
         break;
 
     default:
