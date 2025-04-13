@@ -70,7 +70,7 @@ if ($accion === 'leer-cer') {
     $info = openssl_x509_parse($cert);
     echo json_encode([
         'estatus' => 'valido',
-        "numero_certificado" => ,hexdec($info['serialNumberHex']),
+        "numero_certificado" => hexdec($info['serialNumberHex']),
         'vigencia_inicio' => date('Y-m-d H:i:s', $info['validFrom_time_t']),
         'vigencia_fin' => date('Y-m-d H:i:s', $info['validTo_time_t']),
         'subject' => $info['subject']
