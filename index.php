@@ -79,7 +79,7 @@ switch ($accion) {
         $certData = openssl_x509_parse($cert);
         echo json_encode([
             "estatus" => "valido",
-            "numero_certificado" => $certData['serialNumberHex'] ?? '',
+            "numero_certificado" => isset($certData['serialNumberHex']) ? hex2bin($certData['serialNumberHex']) : '',
             "vigencia_inicio" => formatearFecha($certData['validFrom_time_t']),
             "vigencia_fin" => formatearFecha($certData['validTo_time_t'])
         ]);
@@ -98,7 +98,12 @@ switch ($accion) {
         $cer_bin = base64_decode($cer_b64);
 
         $key = openssl_pkey_get_private($key_bin, $pass);
-        $cert = openssl_x509_read($cer_bin);
+        $cert = @openssl_x509_read($cer_bin);
+        if (!$cert) {
+            $pem = "-----BEGIN CERTIFICATE-----\n" . chunk_split(base64_encode($cer_bin), 64, "\n") . "-----END CERTIFICATE-----\n";
+            $cert = @openssl_x509_read($pem);
+        }
+
 
         if (!$key || !$cert) {
             echo json_encode(["estatus" => "error", "mensaje" => "No se pudo leer alguno de los archivos"]);
