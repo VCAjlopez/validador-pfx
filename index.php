@@ -72,7 +72,7 @@ if ($accion === 'leer-cer') {
         'estatus' => 'valido',
         "numero_certificado" => isset($cert['serialNumberHex']) ? hex2bin($cert['serialNumberHex']) : '',
         'vigencia_inicio' => date('Y-m-d H:i:s', $info['validFrom_time_t']),
-        'vigencia_final' => date('Y-m-d H:i:s', $info['validTo_time_t']),
+        'vigencia_fin' => date('Y-m-d H:i:s', $info['validTo_time_t']),
         'subject' => $info['subject'],
         'issuer' => $info['issuer']
     ]);
