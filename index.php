@@ -15,13 +15,13 @@ $accion = $_POST['accion'] ?? null;
 $pass = $_POST['pass'] ?? '';
 $archivo_b64 = $_POST['archivo_b64'] ?? null;
 
-if (!$accion || ($accion !== 'comparar-key-cer' && !$archivo_b64)) {
+if (!$accion || !$archivo_b64) {
     echo json_encode(["estatus" => "error", "mensaje" => "Faltan parametros"]);
     exit;
 }
 
-$contenido = $archivo_b64 ? base64_decode($archivo_b64) : null;
-if ($archivo_b64 && $contenido === false) {
+$contenido = base64_decode($archivo_b64);
+if ($contenido === false) {
     echo json_encode(["estatus" => "error", "mensaje" => "El archivo base64 no es valido"]);
     exit;
 }
@@ -63,28 +63,27 @@ switch ($accion) {
         }
         break;
 
-   case 'leer-cer':
-    $cert = openssl_x509_read($contenido);
+    case 'leer-cer':
+        $cert = @openssl_x509_read($contenido);
 
-    // Si no es DER, intentar como PEM
-    if (!$cert) {
-        $pem = "-----BEGIN CERTIFICATE-----\n" . chunk_split(base64_encode($contenido), 64, "\n") . "-----END CERTIFICATE-----\n";
-        $cert = openssl_x509_read($pem);
-    }
+        // Si no es DER, intentar como PEM
+        if (!$cert) {
+            $pem = "-----BEGIN CERTIFICATE-----\n" . chunk_split(base64_encode($contenido), 64, "\n") . "-----END CERTIFICATE-----\n";
+            $cert = @openssl_x509_read($pem);
+        }
 
-    if (!$cert) {
-        echo json_encode(["estatus" => "invalido", "mensaje" => "Certificado .cer no valido"]);
-        exit;
-    }
-    $certData = openssl_x509_parse($cert);
-    echo json_encode([
-        "estatus" => "valido",
-        "numero_certificado" => $certData['serialNumberHex'] ?? '',
-        "vigencia_inicio" => formatearFecha($certData['validFrom_time_t']),
-        "vigencia_fin" => formatearFecha($certData['validTo_time_t'])
-    ]);
-    break;
-
+        if (!$cert) {
+            echo json_encode(["estatus" => "invalido", "mensaje" => "Certificado .cer no valido"]);
+            exit;
+        }
+        $certData = openssl_x509_parse($cert);
+        echo json_encode([
+            "estatus" => "valido",
+            "numero_certificado" => $certData['serialNumberHex'] ?? '',
+            "vigencia_inicio" => formatearFecha($certData['validFrom_time_t']),
+            "vigencia_fin" => formatearFecha($certData['validTo_time_t'])
+        ]);
+        break;
 
     case 'comparar-key-cer':
         $key_b64 = $_POST['key_b64'] ?? null;
